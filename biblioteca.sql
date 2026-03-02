@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3307
--- Tiempo de generación: 23-02-2026 a las 16:28:51
+-- Tiempo de generación: 02-03-2026 a las 17:51:04
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -18,8 +18,74 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `ejemplo1`
+-- Base de datos: `biblioteca`
 --
+
+DELIMITER $$
+--
+-- Procedimientos
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminar_libro` (`id` INT)   BEGIN
+	DELETE FROM libro
+    WHERE codigo_libro = id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_act_tel_dir` (`id` INT, `telefono` INT(10), `direccion` VARCHAR(255))   BEGIN	
+    UPDATE socio SET id_socio=id,telefono_socio=telefono,direccion_socio=direccion
+    WHERE id_socio=id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_insertarSocio` (`id` INT, `nombre` VARCHAR(45), `apellido` VARCHAR(45), `direccion` VARCHAR(255), `telefono` INT(10))   BEGIN
+	INSERT INTO socio(id_socio, nombre_socio, apellido_socio, direccion_socio, telefono_socio) VALUES (id,nombre, apellido, direccion, telefono);
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_librosPrestamos` ()   BEGIN
+	SELECT s.nombre_socio As Nombre_Socio, p.codigo_libro AS Codigo_Libro FROM socio s
+	INNER JOIN prestamo p ON s.id_socio=p.id_socio;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_listaAutores` ()   SELECT codigo_autor, nombre_autor
+FROM autor
+ORDER BY nombre_autor DESC$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_nombre_libro` (IN `nombre` VARCHAR(50))   BEGIN
+	SELECT titulo_libro FROM libro
+	WHERE titulo_libro LIKE CONCAT('%',nombre,'%');
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_socio_prestamo` ()   BEGIN
+	SELECT * FROM socio s
+	LEFT JOIN prestamo p ON s.id_socio=p.id_socio;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_tipoAutor` (`variable` VARCHAR(20))   SELECT nombre_autor as 'Autor', tipoAutor
+FROM autor a
+INNER JOIN tipo_autor t
+ON a.codigo_autor=t.codigo_autor
+WHERE tipoAutor=variable$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `inserta_libro` (`codigo` BIGINT(20), `titulo` VARCHAR(255), `genero` VARCHAR(20), `paginas` INT(11), `diaspres` TINYINT(4))   BEGIN
+	INSERT INTO libro(codigo_libro,titulo_libro,genero_libro,numeroPaginas_libro,diasPrestados_libro)
+	VALUES (codigo, titulo , genero, paginas , diaspres);
+END$$
+
+--
+-- Funciones
+--
+CREATE DEFINER=`root`@`localhost` FUNCTION `contar_socio` () RETURNS INT(11) DETERMINISTIC BEGIN
+	DECLARE contador INT;
+    SELECT COUNT(id_socio) AS cantidad_socios INTO contador
+    FROM socio;
+    RETURN contador;
+END$$
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `dias_prestados` (`fecha_devolucion` DATE, `fecha_prestamo` DATE) RETURNS INT(11) DETERMINISTIC BEGIN
+    DECLARE dias_prestados INT;
+    SET dias_prestados = DATEDIFF(fecha_devolucion, fecha_prestamo);
+    RETURN dias_prestados;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -82,7 +148,8 @@ INSERT INTO `libro` (`codigo_libro`, `titulo_libro`, `genero_libro`, `numeroPagi
 (8888888888, 'La Ciudad de los Susurros', 'Misterio', 274, 1),
 (9517530862, 'Las Crónicas del Eco Silencioso', 'fantasía', 448, 7),
 (9876543210, 'El Laberinto de los Recuerdos', 'cuento', 412, 7),
-(9999999999, 'El Enigma de los Espejos Rotos', 'romance', 156, 7);
+(9999999999, 'El Enigma de los Espejos Rotos', 'romance', 156, 7),
+(9788426721006, 'sql', 'ingenieria', 384, 15);
 
 -- --------------------------------------------------------
 
@@ -133,7 +200,7 @@ CREATE TABLE `socio` (
 INSERT INTO `socio` (`id_socio`, `nombre_socio`, `apellido_socio`, `direccion_socio`, `telefono_socio`) VALUES
 (1, 'Ana', 'Ruiz', 'Calle Primavera 123, Ciudad Jardín, Barcelona', '9123456780'),
 (2, 'Andrés Felipe', 'Galindo Luna', 'Avenida del Sol 456, Pueblo Nuevo, Madrid', '2123456789'),
-(3, 'Juan', 'González', 'Calle Principal 789, Villa Flores, Valencia', '2012345678'),
+(3, 'Juan', 'González', 'Calle 30 #52 sur - 35A', '1111111111'),
 (4, 'María', 'Rodríguez', 'Carrera del Río 321, El Pueblo, Sevilla', '3012345678'),
 (5, 'Pedro', 'Martínez', 'Calle del Bosque 654, Los Pinos, Málaga', '1234567812'),
 (6, 'Ana', 'López', 'Avenida Central 987, Villa Hermosa, Bilbao', '6123456781'),
@@ -142,7 +209,8 @@ INSERT INTO `socio` (`id_socio`, `nombre_socio`, `apellido_socio`, `direccion_so
 (9, 'Luis', 'Hernández', 'Avenida de la Montaña 890, Monte Verde, Granada', '6101234567'),
 (10, 'Andrea', 'García', 'Calle del Sol 432, La Colina, Zaragoza', '1112345678'),
 (11, 'Alejandro', 'Torres', 'Carrera del Oeste 765, Ciudad Nueva, Murcia', '4951234567'),
-(12, 'Sofía', 'Morales', 'Avenida del Mar 098, Costa Brava, Gijón', '5512345678');
+(12, 'Sofía', 'Morales', 'Avenida del Mar 098, Costa Brava, Gijón', '5512345678'),
+(13, 'Fabian', 'Paguana', 'Calle 30 # 60 sur 56', '2147483647');
 
 -- --------------------------------------------------------
 
